@@ -1,5 +1,9 @@
 function App() {
-  return <h1>MERN blog app</h1>;
+  return (
+    <div className="container bg-dark-grey">
+      <h3>MERN blogging application</h3>
+    </div>
+  );
 }
 
 export default App;
