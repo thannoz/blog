@@ -1,8 +1,21 @@
-export function add(a: number, b: number): number {
-  return a + b;
-}
+// @deno-types="npm:@types/express@4"
+import express, { NextFunction, Request, Response } from "npm:express@4.18.2";
+import { db, blog } from "./db.ts";
 
-// Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
-if (import.meta.main) {
-  console.log("Add 2 + 3 =", add(2, 3));
-}
+console.log(blog.dbName);
+
+const app = express();
+const PORT = Number(Deno.env.get("PORT")) || 3000;
+
+const reqLogger = function (req: Request, _res: Response, next: NextFunction) {
+  console.info(`${req.method} request to "${req.url}" by ${req.hostname}`);
+  next();
+};
+
+app.get("/", reqLogger, (_req: Request, res: Response) => {
+  res.status(200).send("Hello from Deno and Express!");
+});
+
+app.listen(PORT, () => {
+  console.log(`Listening on ${PORT} ...`);
+});
