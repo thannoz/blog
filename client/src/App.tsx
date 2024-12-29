@@ -1,15 +1,14 @@
 import { Route, Routes } from "react-router-dom";
 
 import Navbar from "./components/Navbar.tsx";
-import SignIn from "./pages/sign-in.tsx";
-import SignUp from "./pages/sign-up.tsx";
+import AuthForm from "./pages/authForm.tsx";
 
 const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Navbar />}>
-        <Route path="signin" element={<SignIn />} />
-        <Route path="signup" element={<SignUp />} />
+        <Route path="signin" element={<AuthForm authType="sign-in" />} />
+        <Route path="signup" element={<AuthForm authType="sign-up" />} />
       </Route>
     </Routes>
   );
