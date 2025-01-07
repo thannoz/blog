@@ -31,7 +31,7 @@ const profile_imgs_collections_list = [
 export interface PersonalInfo {
   fullname: string;
   email: string;
-  password?: string;
+  password: string;
   username?: string;
   bio?: string;
   profile_img?: string;

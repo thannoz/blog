@@ -1,4 +1,3 @@
-//import { MongoClient } from "npm:mongodb@5.6.0";
 import "https://deno.land/x/dotenv@v3.2.0/load.ts";
 import mongoose from "npm:mongoose@^6.7";
 
@@ -16,5 +15,5 @@ await mongoose
     console.log("Connected to MongoDB");
   })
   .catch((err) => {
-    console.log("Cannot connect to mongodb", err);
+    console.log(`Cannot connect to mongodb ${err}`);
   });

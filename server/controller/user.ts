@@ -9,31 +9,30 @@ import { generateUniqueUsername, dataToSend } from "../utils/utils.ts";
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
 
+// deno-lint-ignore require-await
 const healthCheck: express.RequestHandler = async (
   _req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    //console.log("Health check requested");
     res.status(200).send("health check, from Deno and Express");
   } catch (error) {
-    //console.error("Error in health check: ", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).send(`Internal server errror: ${error}`);
   }
 };
 
-interface UserRequestBody extends Request {
+interface UserSignUpRequestBody extends Request {
   fullname: string;
   email: string;
   password: string;
 }
 
-const createUser: express.RequestHandler = async (
-  req: Request<{}, {}, UserRequestBody>,
+const signUp: express.RequestHandler = async (
+  req: Request<{}, {}, UserSignUpRequestBody>,
   res: Response
 ): Promise<Response> => {
   try {
-    const { fullname, email, password }: UserRequestBody = req.body;
+    const { fullname, email, password }: UserSignUpRequestBody = req.body;
 
     if (fullname.length < 3) {
       return res
@@ -72,18 +71,47 @@ const createUser: express.RequestHandler = async (
     });
 
     await newUser.save();
-    return res.status(201).json(dataToSend(newUser));
+
+    const data = await dataToSend(newUser);
+    return res.status(201).json(data);
   } catch (err: unknown) {
     if (err instanceof Error) {
-      if (err.message.includes("E11000")) {
+      if (err.name === "MongoServerError" && (err as any).code === 11000) {
         return res.status(409).json({ error: "Email already exists" });
       }
-      return res.status(500).json({ errorNotNow: err.message });
-    } else {
-      //console.error("Unexpected error: ", err);
-      return res.status(500).send("Internal server error");
+      return res.status(500).json({ error: err.message });
     }
+    return res.status(500).send("Internal server error");
   }
 };
 
-export { createUser, healthCheck };
+type SingInRequestBody = Omit<UserSignUpRequestBody, "fullname">;
+
+const signIn: express.RequestHandler = async (
+  req: Request<{}, {}, SingInRequestBody>,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { email, password }: SingInRequestBody = req.body;
+
+    const user = await User.findOne({ "personal_info.email": email });
+    if (!user) {
+      return res.status(403).json({ error: "User not found." });
+    }
+
+    const match = await bcrypt.compare(password, user.personal_info.password);
+    if (!match) {
+      return res.status(403).json({ error: "Incorrect password" });
+    }
+
+    const data = await dataToSend(user);
+
+    return res.status(200).json(data);
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return res.status(500).json({ error: message });
+  }
+};
+
+export { healthCheck, signUp, signIn };
