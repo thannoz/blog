@@ -3,8 +3,8 @@ import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 // @ts-types="npm:@types/express@4"
 import express, { Request, Response } from "npm:express@4.18.2";
 
-import User from "../model/User.ts";
 import { generateUniqueUsername, dataToSend } from "../utils/utils.ts";
+import UserModel from "../model/User.ts";
 
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
@@ -61,7 +61,7 @@ const signUp: express.RequestHandler = async (
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({
+    const newUser = new UserModel({
       personal_info: {
         password: hashedPassword,
         fullname: fullname,
@@ -73,6 +73,7 @@ const signUp: express.RequestHandler = async (
     await newUser.save();
 
     const data = await dataToSend(newUser);
+    console.log("user sign up: ", data);
     return res.status(201).json(data);
   } catch (err: unknown) {
     if (err instanceof Error) {
@@ -94,18 +95,20 @@ const signIn: express.RequestHandler = async (
   try {
     const { email, password }: SingInRequestBody = req.body;
 
-    const user = await User.findOne({ "personal_info.email": email });
+    const user = await UserModel.findOne({ "personal_info.email": email });
+
     if (!user) {
       return res.status(403).json({ error: "User not found." });
     }
 
-    const match = await bcrypt.compare(password, user.personal_info.password);
+    const match = await bcrypt.compare(password, user?.personal_info.password);
     if (!match) {
       return res.status(403).json({ error: "Incorrect password" });
     }
 
     const data = await dataToSend(user);
 
+    console.log("user signed in: ", data);
     return res.status(200).json(data);
   } catch (error: unknown) {
     const message =

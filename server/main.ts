@@ -1,5 +1,6 @@
 // @ts-types="npm:@types/express@4"
 import express from "npm:express@4.18.2";
+import cors from "npm:cors@2.8.5";
 
 import "./db.ts";
 
@@ -11,6 +12,7 @@ const PORT = Number(Deno.env.get("PORT")) || 3000;
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 app.use(reqLogger);
 
 app.use("/", user);
