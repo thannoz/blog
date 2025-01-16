@@ -1,0 +1,32 @@
+Diese sind meine Methoden, um den access_token aus dem localStorage zu holen:
+
+export const setItem = (key: string, value: unknown) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getItem = (key: string): string | undefined => {
+  try {
+    const item = window.localStorage.getItem(key);
+    return item ? JSON.parse(key) : undefined;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+Wenn ich jedoch den access_token mit getItem auslesen möchte,
+bekommen 'Unexpected token 'a', "access_token" is not valid JSON'
+
+und das stimmt auch weil der Token so gespeichert wird:
+
+'"\\"eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjY3ODI4ODUzYWQzMzE5MjMyOTE4ZDA1YyIsImlhdCI6MTczNjYxMjQ1MiwiZXhwIjoxNzM2Njk4ODUyfQ.ggY6ROQj5aOMYvVCmOVbbsgSPZjlHAUHO7VqGo0qfg0\\""'
+
+Im Backend sende ich den Token allerdings so ab:
+{
+     access_token: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjY3ODI4ODUzYWQzMzE5MjMyOTE4ZDA1YyIsImlhdCI6MTczNjYxMjQ1MiwiZXhwIjoxNzM2Njk4ODUyfQ.ggY6ROQj5aOMYvVCmOVbbsgSPZjlHAUHO7VqGo0qfg0",
+}
+
+Warum werden die ungültigen Zeichen an den Token im localStorage angehängt?

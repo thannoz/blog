@@ -1,7 +1,7 @@
 // deno-lint-ignore-file ban-types
 import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 // @ts-types="npm:@types/express@4"
-import express, { Request, Response } from "npm:express@4.18.2";
+import express, { Request, Response, RequestHandler } from "express";
 
 import { generateUniqueUsername, dataToSend } from "../utils/utils.ts";
 import UserModel from "../model/User.ts";
@@ -27,7 +27,9 @@ interface UserSignUpRequestBody extends Request {
   password: string;
 }
 
-const signUp: express.RequestHandler = async (
+// When a user is signed up, we create an access token that
+// will be used by the user to browse throughout our application...
+const signUp: RequestHandler = async (
   req: Request<{}, {}, UserSignUpRequestBody>,
   res: Response
 ): Promise<Response> => {
@@ -88,7 +90,7 @@ const signUp: express.RequestHandler = async (
 
 type SingInRequestBody = Omit<UserSignUpRequestBody, "fullname">;
 
-const signIn: express.RequestHandler = async (
+const signIn: RequestHandler = async (
   req: Request<{}, {}, SingInRequestBody>,
   res: Response
 ): Promise<Response> => {

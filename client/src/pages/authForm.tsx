@@ -1,20 +1,38 @@
-import { useRef } from "react";
-import { Link } from "react-router-dom";
+import axios from "axios";
+import { useRef, useEffect } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
 
 import InputBox from "../components/InputBox";
 import googleIcon from "../img/google.png";
 import AnimationWrapper from "../common/animation-wrapper";
-import { sendDataToServer } from "../lib/utils";
+import { useUserContext } from "../hooks/use-context.ts";
+import { FormDataProps } from "../types/formData.ts";
+import { ApiResponse } from "../types/apiResponse.ts";
+import { setItem } from "../utils/localStorage.ts";
 
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
+const baseURL: string = import.meta.env.VITE_SERVER_DOMAIN;
 
 interface AuthFormProps {
   authType: string;
 }
 
 const AuthForm = ({ authType }: AuthFormProps) => {
+  const {
+    userAuth: { access_token },
+    setUserAuth,
+  } = useUserContext();
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (access_token) {
+      navigate("/");
+    }
+  }, [access_token]);
+
   const authFormRef = useRef<HTMLFormElement | null>(null);
 
   const handleSubmit = (e: React.SyntheticEvent) => {
@@ -58,7 +76,36 @@ const AuthForm = ({ authType }: AuthFormProps) => {
     };
 
     const serverRoute = authType === "sign-in" ? "/signin" : "/signup";
-    sendDataToServer(serverRoute, customFormData);
+
+    const sendToServer = async (
+      serverRoute: string,
+      formData: FormDataProps
+    ) => {
+      try {
+        const response = await axios.post<ApiResponse>(
+          `${baseURL}${serverRoute}`,
+          formData
+        );
+        if (serverRoute === "/signin") {
+          setItem("user", JSON.stringify(response.data));
+          setUserAuth(response.data);
+          return;
+        }
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const backendMessage = error.response?.data?.error;
+          if (backendMessage) {
+            console.log(`Error: ${backendMessage}`);
+          } else {
+            console.log(`Error sending request: ${error.message}`);
+          }
+        } else {
+          console.log(`An unexpected error occurred: ${error}`);
+        }
+      }
+    };
+
+    sendToServer(serverRoute, customFormData);
   };
 
   return (
